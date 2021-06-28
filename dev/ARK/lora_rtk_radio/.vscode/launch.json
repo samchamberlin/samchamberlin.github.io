@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "stutil",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/lora_rtk_radio.elf",
+            "name": "Debug (ST-Util)",
+            "device": "STM32WLE5xx",
+            "v1": false
+            // "showDevDebugOutput": true
+        },
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "jlink",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/lora_rtk_radio.elf",
+            "name": "Debug (J-Link)",
+            "device": "STM32WLE5JC",
+            "interface": "swd",
+            "ipAddress": null,
+            "serialNumber": null,
+        },
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "/dev/cu.usbmodemE4CCA0E11",
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/lora_rtk_radio.elf",
+            "name": "Debug (BMP)",
+            "device": "STM32WLxx",
+            "interface": "bmp",
+        }
+    ]
+}

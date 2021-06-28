@@ -1,3 +1,17 @@
 {
+    "files.associations": {
+        "random": "c",
+        "stm32g0xx_hal.h": "c",
+        "__nullptr": "c",
+        "__tuple": "c",
+        "array": "c",
+        "compare": "c",
+        "complex": "c",
+        "cstddef": "c",
+        "exception": "c",
+        "type_traits": "c",
+        "limits": "c",
+        "new": "c"
+    },
     "stm32-for-vscode.openOCDPath": false
 }

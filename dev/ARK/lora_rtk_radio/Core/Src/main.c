@@ -22,21 +22,26 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "printf.h"
+#include "string.h"
+#include "../../c_library_v2/common/mavlink.h"
+#include "../../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define RADIO_FREQUENCY 910000000
+#define RADIO_TX_POWER 20
+#define LORARADIO_TX_BUFFER_SIZE         256
+#define LORARADIO_RX_BUFFER_SIZE         512
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -45,7 +50,40 @@ SUBGHZ_HandleTypeDef hsubghz;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+enum Bandwidth {
+    BW_125 = 0,
+    BW_250,
+    BW_500,
+};
 
+enum SpreadingFactor {
+    SF_7 = 7,
+    SF_8,
+    SF_9,
+    SF_10,
+    SF_11,
+    SF_12,
+};
+
+enum CodingRate {
+    CR_4_5 = 1,
+    CR_4_6,
+    CR_4_7,
+    CR_4_8,
+};
+
+enum IdleMode {
+    IDLE_STANDBY = 0,
+    IDLE_SLEEP,
+};
+
+struct Radio {
+  int frequency;
+  int txPower;
+  enum Bandwidth bandwidth;
+  enum SpreadingFactor spreadingFactor;
+  enum CodingRate codingRate;
+} lora_radio;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -54,12 +92,11 @@ static void MX_GPIO_Init(void);
 static void MX_SUBGHZ_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+void Radio_Init(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -69,7 +106,6 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -78,14 +114,13 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  Radio_Init();
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -93,17 +128,51 @@ int main(void)
   MX_SUBGHZ_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  uint8_t Rx_data[10];
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    printf("Hello World!\r\n");
+
+    // HAL_UART_Receive(&huart2, Rx_data, 4, 100);
+    // HAL_Delay(100);
+
+
+
+
+    // mavlink_frame_char(chan, byte, &msg, &status);
+    // printf("Received message with ID %d, sequence: %d from component %d of system %d\r\n", msg.msgid, msg.seq, msg.compid, msg.sysid);
+
+
+    // // Transmitter
+    // mavlink_message_t msg;
+    // mavlink_status_t status;
+    // int chan = 0;
+
+    // while (serial.bytesAvailable > 0)
+    // {
+    //   uint8_t byte = serial.getNextByte();
+    //   if (mavlink_frame_char(chan, byte, &msg, &status) != MAVLINK_FRAMING_INCOMPLETE)
+    //   {
+    //     printf("Received message with ID %d, sequence: %d from component %d of system %d", msg.msgid, msg.seq, msg.compid, msg.sysid);
+    //   }
+    // }
+
+
+
+
+    HAL_Delay(100);
+
+
+
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
 }
 
@@ -181,14 +250,12 @@ static void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
-
   /* USER CODE END USART2_Init 0 */
 
   /* USER CODE BEGIN USART2_Init 1 */
-
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 57600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -234,6 +301,12 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
@@ -274,6 +347,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PC1 PC0 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -282,9 +362,41 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF8_LPUART1;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PA4 PA5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
+void _putchar(char c)
+{
+  uint8_t temp = c;
+  HAL_UART_Transmit(&huart2, &temp, 1, 10);
+}
+
+/**
+  * @brief LoRa Radio Initialization Function
+  * @param None
+  * @retval None
+  */
+void Radio_Init(){
+  lora_radio.frequency = RADIO_FREQUENCY;
+  lora_radio.txPower = RADIO_TX_POWER;
+  lora_radio.bandwidth = BW_500;
+  lora_radio.spreadingFactor = SF_9;
+  lora_radio.codingRate = CR_4_5;
+}
+
+int Start_Radio(unsigned long frequency)
+{
+   
+
+    return 1;
+}
 
 /* USER CODE END 4 */
 
